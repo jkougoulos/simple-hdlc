@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # coding: utf8
 
 __version__ = '0.2'
@@ -53,12 +53,16 @@ class Frame(object):
         if not res:
             c1 = str(self.crc)
             c2 = str(calcCRC(self.data))
-            logger.warning("invalid crc %s != %s", c1.encode("hex"), c2.encode("hex"))
+            logger.warning("invalid crc %s != %s", c1, c2)
             self.error = True
         return res
 
     def toString(self):
         return str(self.data)
+
+    def toBytearray(self):
+        return self.data
+
 
 
 class HDLC(object):
@@ -76,28 +80,28 @@ class HDLC(object):
 
     def sendFrame(self, data):
         bs = self._encode(self.toBytes(data))
-        logger.info("Sending Frame: %s", bs.encode("hex"))
+        logger.info("Sending Frame: %s", bs)
         res = self.serial.write(bs)
         logger.info("Send %s bytes", res)
 
     def _onFrame(self, frame):
         self.last_frame = frame
         s = self.last_frame.toString()
-        logger.info("Received Frame: %s", s.encode("hex"))
+        logger.info("Received Frame: %s", s)
         if self.frame_callback is not None:
             self.frame_callback(s)
 
     def _onError(self, frame):
         self.last_frame = frame
         s = self.last_frame.toString()
-        logger.warning("Frame Error: %s", s.encode("hex"))
+        logger.warning("Frame Error: %s", s)
         if self.error_callback is not None:
             self.error_callback(s)
 
     def _readBytes(self, size):
         while size > 0:
             b = bytearray(self.serial.read(1))
-            if b < 1:
+            if len(b) < 1:
                 return False
             res = self._readByte(b[0])
             if res:
@@ -150,7 +154,7 @@ class HDLC(object):
                 # Validate and return
                 if not self.last_frame.error:
                     # Success
-                    s = self.last_frame.toString()
+                    s = self.last_frame.toBytearray()
                     return s
                 elif self.last_frame.finished:
                     # Error
