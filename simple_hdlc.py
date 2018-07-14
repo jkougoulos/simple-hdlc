@@ -79,7 +79,7 @@ class HDLC(object):
         return bytearray(data)
 
     def sendFrame(self, data):
-        bs = self._encode(self.toBytes(data))
+        bs = self._encode(data)
         logger.info("Sending Frame: %s", bs)
         res = self.serial.write(bs)
         logger.info("Send %s bytes", res)
